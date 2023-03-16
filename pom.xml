@@ -1,0 +1,159 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>br.com.ppware</groupId>
+  <artifactId>gitReleaser</artifactId>
+  <version>1.0</version>
+  <packaging>jar</packaging>
+
+  <name>GitReleaser</name>
+  <description>
+    Aplicação para automatizar pacotes release.
+    O objetivo é entregar ao cliente os mesmos artefatos que estarão sendo enviados ao repositório remoto.
+  </description>
+  <url>http://maven.apache.org</url>
+
+  <repositories>
+    <repository>
+      <id>mvnrepository</id>
+      <name>Maven Repo 1</name>
+      <url>https://repo1.maven.org/maven2</url>
+    </repository>
+  </repositories>
+
+  <properties>
+    <java.version>1.8</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <java.version>1.8</java.version>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+  </properties>
+
+  <dependencies>
+    <!-- JUNIT -->
+    <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.12</version>
+        <scope>test</scope>
+    </dependency>
+    <!-- APACHE NET -->
+    <dependency>
+      <groupId>commons-net</groupId>
+      <artifactId>commons-net</artifactId>
+      <version>3.8.0</version>
+    </dependency>
+    <!-- JSCH (SFTP) -->
+    <dependency>
+      <groupId>com.jcraft</groupId>
+      <artifactId>jsch</artifactId>
+      <version>0.1.55</version>
+    </dependency>
+    <!-- LOMBOK -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.24</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <scm>
+    <connection>scm:git:https://172.31.10.153/atendimento1/atendimento1/vivo3/batch/javabatch.git</connection>
+    <developerConnection>scm:git:https://172.31.10.153/atendimento1/atendimento1/vivo3/batch/javabatch.git</developerConnection>
+    <tag>HEAD</tag>
+    <url>https://172.31.10.153/atendimento1/atendimento1/vivo3/batch/javabatch.git</url>
+  </scm>
+  <build>
+    <plugins>
+      <!-- ARTEFATO JAR-DEPENDENCY -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <mainClass>br.com.ppware.App</mainClass>
+              <classpathPrefix>lib/</classpathPrefix>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+            </manifest>
+            <manifestEntries>
+              <Build-Number>${buildNumber}</Build-Number>
+              <Built-Time>${buildDateVariable}</Built-Time>
+            </manifestEntries>
+          </archive>
+          <!--                    <fileSets>-->
+          <!--                        <fileSet>-->
+          <!--                            <directory>src/main/resources</directory>-->
+          <!--                            <outputDirectory>/${project.artifactId}/</outputDirectory>-->
+          <!--                            <includes>-->
+          <!--                                <include>result_fake_beb115.txt</include>-->
+          <!--                            </includes>-->
+          <!--                        </fileSet>-->
+          <!--                    </fileSets>-->
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- COMPILADOR JAVA 8 -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.0</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>1.18.24</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <!-- GERENCIADOR DE BUILD NUMBER -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <revisionOnScmFailure>no.scm.config.in.pom</revisionOnScmFailure>
+        </configuration>
+        <executions>
+          <execution>
+            <id>buildnumber</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>create</goal>
+            </goals>
+            <configuration>
+              <format>{0,number}</format>
+              <items>
+                <item>buildNumber</item>
+              </items>
+              <doCheck>false</doCheck>
+              <doUpdate>false</doUpdate>
+              <revisionOnScmFailure>unknownbuild</revisionOnScmFailure>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    <finalName>${project.artifactId}-${project.version}.b${buildNumber}</finalName>
+  </build>
+
+</project>
