@@ -1,5 +1,6 @@
-package br.com.ppware;
+package br.com.ppware.files;
 
+import br.com.ppware.Log;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.net.ftp.FTP;
@@ -7,7 +8,6 @@ import org.apache.commons.net.ftp.FTPClient;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -17,8 +17,9 @@ public class FtpUploader extends Uploader {
         super(server, port, username, password);
     }
 
-    public void upload(File file, String remoteDirectory) throws Exception {
+    public boolean upload(File file, String remoteDirectory) {
         final FTPClient ftpClient = new FTPClient();
+        Log.info("Tentando conexão FTP...");
         try (FileInputStream inputStream = new FileInputStream(file)) {
             ftpClient.connect(getServer(), getPort());
             ftpClient.login(getUsername(), getPassword());
@@ -26,15 +27,13 @@ public class FtpUploader extends Uploader {
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
             ftpClient.changeWorkingDirectory(remoteDirectory);
             ftpClient.storeFile(file.getName(), inputStream);
-
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-
-        } finally {
             ftpClient.logout();
             ftpClient.disconnect();
+            return true;
+
+        } catch (IOException e) {
+            Log.erro("Erro durante envio SFTP: ", e.getMessage());
+            return false;
         }
     }
 

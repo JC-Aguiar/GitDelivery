@@ -1,5 +1,6 @@
-package br.com.ppware;
+package br.com.ppware.files;
 
+import br.com.ppware.Log;
 import com.jcraft.jsch.*;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -13,12 +14,13 @@ public class SftpUploader extends Uploader {
         super(server, port, username, password);
     }
 
-    public void upload(File file, String remoteDirectory) throws Exception {
+    public boolean upload(File file, String remoteDirectory) {
         String sourceFilePath = file.getAbsolutePath();
         JSch jsch = new JSch();
         Session session = null;
         Channel channel = null;
         ChannelSftp sftpChannel = null;
+        Log.info("Tentando conexão SFTP...");
         try {
             //Preparando para realizar conexão
             //StrictHostKeyChecking:
@@ -32,10 +34,11 @@ public class SftpUploader extends Uploader {
             sftpChannel = (ChannelSftp) channel;
             //Enviando arquivo
             sftpChannel.put(sourceFilePath, remoteDirectory);
+            return true;
 
         } catch (JSchException | SftpException e) {
-            throw new RuntimeException(e);
-//            e.printStackTrace();
+            Log.erro("Erro durante envio SFTP: ", e.getMessage());
+            return false;
 
         } finally {
             if(sftpChannel != null) sftpChannel.exit();

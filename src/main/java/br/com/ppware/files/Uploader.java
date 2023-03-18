@@ -1,4 +1,4 @@
-package br.com.ppware;
+package br.com.ppware.files;
 
 import lombok.AccessLevel;
 import lombok.Data;
@@ -9,10 +9,11 @@ import java.io.File;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public abstract class Uploader {
+
     String server;
     int port;
     String username;
     String password;
 
-    public abstract void upload(File file, String remoteDirectory) throws Exception;
+    public abstract boolean upload(File file, String remoteDirectory);
 }

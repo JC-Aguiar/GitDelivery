@@ -1,5 +1,6 @@
 package br.com.ppware;
 
+import br.com.ppware.util.MensagemUtil;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,41 +10,31 @@ import java.util.Map;
 
 public enum AppParametros {
 
-    PAUSE("-p", "--pause",
-          "Informe quantos milissegundos de intervalo terá entre as execuções", true, ""),
-    ONE_SHOT("-o", "--one-shot",
-             "Executa a aplicação somente uma vez", false, ""),
-    TESTE("-t", "--teste",
-          "A aplicação não alterará em nada no banco", false, ""),
-    DRIVE("-d", "--drive",
-          "Informe o drive de conexão Java ao banco", true, ""),
+    PROTOCOLO("-p", "--protocolo",
+          "Informe qual o protocolo de envio (padrão: SFTP)", true),
+    ENVIO("-d", "--destino",
+             "Informe o destinatário do pacote release no formato: <ip>':'<porta>", true),
     LOGIN("-l", "--login",
-          "Informe as credenciais de conexão ao banco no formato: <usuario>'/'<senha>", true, ""),
+          "Informe as credenciais para envio no formato: <usuario>'/'<senha>", true),
+    TESTE("-t", "--teste",
+          "A aplicação não alterará em nada no banco", false),
     HELP("-h", "--help",
-         "Exibe todas as opção e suas descrições", false, "");
+         "Exibe todas as opção e suas descrições", false);
 
     public final String sigla;
     public final String nome;
     public final String descricao;
     public final boolean argumento;
-    @Setter
-    @Getter
-    private String valor;
 
-    AppParametros(String sigla, String nome, String descricao, boolean argumento, String valor) {
+    AppParametros(String sigla, String nome, String descricao, boolean argumento) {
         this.sigla = sigla;
         this.nome = nome;
         this.descricao = descricao;
         this.argumento = argumento;
-        this.valor = valor;
     }
 
     public static boolean compare(AppParametros parametro, String comando) {
         return comando.equals(parametro.sigla) || comando.equals(parametro.nome);
-    }
-
-    public static void setValor(AppParametros parametro, String valor) {
-        parametro.valor = valor;
     }
 
     public static void exibirParametros() {
