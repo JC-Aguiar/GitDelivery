@@ -1,5 +1,6 @@
 package br.com.ppware;
 
+import java.io.File;
 import java.sql.Date;
 import java.time.Instant;
 import java.util.*;
@@ -29,27 +30,34 @@ public class Propriedades {
     public static final Map<AppParametros, String> PARAMETROS = new HashMap();
     public static long duracaoTotal;
 
-    //ATRIBUTOS DO BANCO  --------------------------------------------------------------------------------
+    //ATRIBUTOS GERAIS  --------------------------------------------------------------------------------
     public static java.util.Date ifxdate = Date.from(Instant.now());
-    public static final String SERVIDOR = "10.129.164.206";
-    public static final Integer PORTA = 22;
-    public static final String USUARIO = "rcvry";
-    public static final String SENHA = "Ppw@1022";
+    public static String gitRemote = "";
+    public static String gitUrl = "";
 
     //ATRIBUTOS DE TRANSFERÊNCIA --------------------------------------------------------------------------------
-    public static final List<String> ARQUIVOS = Arrays.asList("teste.txt");
-    public static final String ORIGEM = "src/main/resources/";
-    public static final String DESTINO = "/app/rcvry/tmp/Teste";
+    public static final List<File> ARQUIVOS = Arrays.asList(new File("teste.txt"));
+    public static File origem = new File("src/main/resources/");
+    public static File destino = new File("/app/rcvry/tmp/Teste");
+    public static String servidor = "10.129.164.206";
+    public static Integer porta = 22;
+    public static String usuario = "rcvry";
+    public static String senha = "Ppw@1022";
 
     //UTILIDADE GERAIS --------------------------------------------------------------------------------
     public static String getHost() {
-        return SERVIDOR + ":" + PORTA;
+        return servidor + ":" + porta;
     }
 
     public static List<String> getArquivosPath() {
         return ARQUIVOS.stream()
-            .map(arq -> ORIGEM + arq)
+            .map(arq -> origem + arq.getName())
             .collect(Collectors.toList());
+    }
+
+    public static void setGitRemote(String nome, String url) {
+        gitRemote = nome;
+        gitUrl = url;
     }
 
 }

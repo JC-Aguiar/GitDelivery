@@ -2,61 +2,75 @@ package br.com.ppware.version;
 
 import br.com.ppware.Propriedades;
 import br.com.ppware.exception.GitAusenteException;
+import br.com.ppware.net.Internet;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 public class Git {
 
-    public static void gitAtivo() throws GitAusenteException {
-        final File gitFolder = new File(Propriedades.ORIGEM, ".git");
+    private static List<String> executar(String command, File directory) throws IOException, InterruptedException {
+        final Process process = Runtime.getRuntime().exec(command, null, directory);
+        process.waitFor();
+        final List<String> resultado = new ArrayList<>();
+        byte[] buffer = new byte[1024];
+        int bytesRead = process.getInputStream().read(buffer);
+        while (bytesRead != -1) {
+            resultado.add(new String(buffer, 0, bytesRead).trim());
+            bytesRead = process.getInputStream().read(buffer);
+        }
+        if (process.exitValue() != 0) {
+            throw new IOException(process.getErrorStream().toString().trim());
+        }
+        return resultado;
+    }
+
+    public static void validaGitAtivo() throws GitAusenteException {
+        final File gitFolder = new File(Propriedades.origem, ".git");
         if(gitFolder.exists() && gitFolder.isDirectory()) throw new GitAusenteException();
     }
 
-    /**
-     * ETAPAS DO PROCESSO:
-     * 1) Valida Git Remoto e Servidor Destino:
-     *      1.1) Se o diretório do projeto possui Git iniciado
-     *      1.1) Se é possível conectar ao repositório Git
-     *      1.2) Se é possível conectar ao servidor de entrega
-     *      1.3) Se o diretório informado no servidor de entrega permite criar diretórios e arquivos
-     * 2) Valida Git Local:
-     *      2.1) Realiza comando `git status -uall --porcelain`
-     *      2.2) Tratar a resposta, para obter somente arquivos novos ("A "), modificados (" M") e não rastreados ("??")
-     *      2.3) Havendo arquivos, solicita mensagem para novo commit (opcional)
-     *      2.4) Não havendo arquivos, segue
-     * 3) Valida conflitos:
-     *      3.1) Realiza comando `git pull`
-     *      3.2) Trata a mensagem retornada, buscando por "CONFLICT"
-     *          - Se identificado, realiza o comando `git merge --abort` e aborta
- *              - Se não identificado, segue
-     * 4) Coleta:
-     *      4.1) Nome do branch atual
-     *      4.2) Primeiro commit da branch atual
-     *      4.3) Exibe todas as tags usadas no projeto, dando ênfase a mais recente
-     *      4.4) Solicita nome da nova tag a ser utilizada (interação obrigatória)
-     * 5) Executa:
-     *      5.1) Criação da nova pasta release (no GitReleaser) e obtêm seu diretório absoluto
-     *      5.2) Comando git dif
-     *      5.3) Coleta de todos os diretórios/arquivos diferentes entre os commits
-     *      5.4) Armazena cada diretório/arquivo na nova pasta release (no GitReleaser)
-     *      5.5) Adiciona o arquivo entrega.txt, contendo: data da entrega, usuário git que fez a entrega
-     * 6) Executa envio ao servidor:
-     *      6.1) Caso algum arquivo falhe, apagar a nova pasta release (no GitReleaser) e abortar tudo
-     * 7) Finaliza:
-     *      7.1) Em caso de sucesso:
-     *          - Abre o arquivo contatos.txt (no GitReleaser)
-     *          - Exibe os contatos disponíveis
-     *          - Solicita qual e-mail deverá ser notificado do sucesso (optional)
-     *      7.1) Caso erro:
-     *          - Obtêm o log do processo com erro
-     *          - Envia o log ao e-mail 'joao.aguair@ppware.com.br', sob assunto "Falha GitReleaser ${data}: ${git-user}"
-     * COMANDOS:
-     * Branch nome: git rev-parse --abbrev-ref HEAD
-     * Hash do primeiro commit na branch atual: git rev-list --max-parents=0 HEAD
-     *
-     * ESTRUTURA INTERNA:
-     * Nomenclatura das pastas release: release/projetos/${projeto}/${branch}
-     * Nomenclatura das subpastas do projeto: ${data}${hora}_${commit} ou ${data}${hora}_${tag}
-     */
+    public static Map<String, String> validaGitRemotes() throws IOException, InterruptedException {
+        final List<String> resultado = executar("git remote -v", Propriedades.origem);
+        final Map<String, String> remotes = new HashMap<>();
+        resultado.forEach(r -> {
+            final String[] opcoes = r.split(" ");
+            if(opcoes.length <= 1) return;
+            if(Internet.testaConexao(opcoes[1]))
+                remotes.put(opcoes[0], opcoes[1]);
+        });
+        if(remotes.isEmpty())
+            throw new RuntimeException("Não foi possível se conectar em nenhum dos repositórios remotos.");
+        return remotes;
+    }
+
+    public static Map<String, String> validaGitStatus() throws IOException, InterruptedException {
+        final List<String> resultado = executar("git status -uall --porcelain", Propriedades.origem);
+        final Map<String, String> status = new HashMap<>();
+        resultado.forEach(linha -> {
+            final String sinal = linha.substring(0, 1);
+            final String arquivo = linha.substring(2, linha.length()-1);
+            if(sinal.equals("A ") || sinal.equals(" M") || sinal.equals("??"))
+                status.put(sinal, arquivo);
+        });
+        return status;
+    }
+
+    public static void validaGitPull() throws IOException, InterruptedException {
+        final String comandoGit = "git pull " + Propriedades.gitRemote;
+        final List<String> resultado = executar(comandoGit, Propriedades.origem);
+        resultado.stream()
+            .filter(linha -> linha.contains("CONFLICT"))
+            .findAny()
+            .ifPresent(linha -> {
+                try {
+                    executar("git merge --abort", Propriedades.origem);
+                } catch (Exception e) {
+                    throw new RuntimeException("Não foi possível desfazer o merge: Realize operação manualmente");
+                }
+                throw new RuntimeException("Conflitos encontrados");
+            });
+    }
 
 }
