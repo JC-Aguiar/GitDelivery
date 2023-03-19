@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>br.com.ppware</groupId>
-  <artifactId>gitReleaser</artifactId>
+  <artifactId>gitDelivery</artifactId>
   <version>1.0</version>
   <packaging>jar</packaging>
 
-  <name>GitReleaser</name>
+  <name>GitDelivery</name>
   <description>
     Aplicação para automatizar pacotes release.
     O objetivo é entregar ao cliente os mesmos artefatos que estarão sendo enviados ao repositório remoto.
